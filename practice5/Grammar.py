@@ -44,13 +44,6 @@ class Grammar:
         elif i > j:
             return -1
 
-    def substitute(self, bodies, body_to_change, nonterminal, count = 1):
-        new_bodies = set()
-        for body in self.productions[nonterminal]:
-            new_bodies.add(body_to_change.replace(nonterminal, body, count))
-        bodies.remove(body_to_change)
-        return bodies | new_bodies
-
     def __make_indexes_equal(self):
         valid_bodies = set()
         def helper(head, bodies):
@@ -91,7 +84,14 @@ class Grammar:
                     new_rules[symbol].add(item[1 : len(item)]) 
                     new_rules[symbol].add(item[1 : len(item)] + symbol) 
         return new_rules
-           
+
+    def substitute(self, bodies, body_to_change, nonterminal, count = 1):
+        new_bodies = set()
+        for body in self.productions[nonterminal]:
+            new_bodies.add(body_to_change.replace(nonterminal, body, count))
+        bodies.remove(body_to_change)
+        return bodies | new_bodies
+
     # [9312, 9471]
     def cnf_to_gnf(self): 
         """ Se asume que nos dan la gramatica en la forma normal de Chumsky """
@@ -99,11 +99,12 @@ class Grammar:
         gnf.productions = gnf.remove_unit_productions()
         # X: An, X en N, n en naturales
         gnf.enum = { item: num for num, item in enumerate(gnf.nonterminals, start = 1) }
-        print(gnf.productions)
-        print(gnf.enum)
         gnf.__make_indexes_equal()
         print(gnf.productions)
-        aux_grammar = Grammar(gnf.__remove_equal_indexes())
+        print(gnf.enum)
+        aux_dict = gnf.__remove_equal_indexes()
+        print(gnf.productions)
+        print(aux_dict)
 
     def remove_unit_productions(self):
         ''' Removemos producciones unarias mediante un grafo '''
