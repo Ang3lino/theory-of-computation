@@ -59,7 +59,7 @@ class Grammar:
                 if self.__cmp_rule(head, body) >= 0:
                     valid_bodies.add(body)
                 else:
-                    posible_valid_bodies = self.substitute(bodies, body, body[0])
+                    posible_valid_bodies = self.substitute(bodies.copy(), body, body[0])
             if len(posible_valid_bodies) > 0:
                 helper(head, posible_valid_bodies)
         for head in self.productions:
@@ -67,16 +67,43 @@ class Grammar:
             helper(head, self.productions[head])
             self.productions[head] = valid_bodies
 
+    def __remove_equal_indexes(self):
+        rules = self.productions
+        k = 9312 # Valor UTF-8
+        recursive_bodies = list()
+        new_rules = dict()
+        for head in rules:
+            at_least_one = False
+            for body in rules[head]:
+                if self.__cmp_rule(head, body) == 0: # tienen recursividad por la izquierda
+                    recursive_bodies.append(body)
+                    at_least_one = True
+            if at_least_one:
+                for item in recursive_bodies:
+                    rules[head].remove(item)
+                to_concat = list(rules[head])
+                symbol = chr(k)
+                k += 1
+                while to_concat:
+                    rules[head].add(to_concat.pop() + symbol)
+                new_rules[symbol] = set()
+                for item in recursive_bodies:
+                    new_rules[symbol].add(item[1 : len(item)]) 
+                    new_rules[symbol].add(item[1 : len(item)] + symbol) 
+        return new_rules
+           
+    # [9312, 9471]
     def cnf_to_gnf(self): 
         """ Se asume que nos dan la gramatica en la forma normal de Chumsky """
         gnf = Grammar(self.productions, self.start)
         gnf.productions = gnf.remove_unit_productions()
         # X: An, X en N, n en naturales
         gnf.enum = { item: num for num, item in enumerate(gnf.nonterminals, start = 1) }
+        print(gnf.productions)
+        print(gnf.enum)
         gnf.__make_indexes_equal()
-        gnf.__print_dict(gnf.productions)
-        #for key in rules: # pasamos cada elemento al constructor list
-        #    rules[key] = list(map(list, rules[key]))
+        print(gnf.productions)
+        aux_grammar = Grammar(gnf.__remove_equal_indexes())
 
     def remove_unit_productions(self):
         ''' Removemos producciones unarias mediante un grafo '''
