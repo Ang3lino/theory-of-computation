@@ -8,7 +8,11 @@ class Grammar:
     """ G = (N, T, S, P) """
     
     def __init__(self, productions, start = 'S'):
-        """ nonterminals: set[string]
+        """ El constructor infiere las variables no terminales y no terminales por medio
+            del diccionario self.productions. La variable inicial por defecto es el 
+            caracter S.
+            
+            nonterminals: set[string]
             terminals: set[string]
             start: string
             productions: dict[string: set[string]] """
@@ -21,6 +25,7 @@ class Grammar:
         self.is_cnf = False
 
     def __determine_nonterminals(self):
+        """ Es importante ejecutar este metodo antes de __determine_terminals() """
         return set(self.productions.keys())
 
     def __determine_terminals(self):
@@ -32,10 +37,13 @@ class Grammar:
         return terminals - self.nonterminals
 
     def __cmp_rule(self, nonterm, rule):
-        values = self.enum
+        """ Metodo usado para ordenar las variables no terminales en el metodo
+            cnf_to_gnf. """
+        values = self.enum # es un diccionario que guarda las enumeraciones de las variables
+        # no terminales
         if not rule[0] in values:
-            return 1
-        i = values[nonterm]
+            return 1 # si el cuerpo es de la forma aA siendo a un terminal
+        i = values[nonterm] 
         j = values[rule[0]]
         if i < j:
             return 1
@@ -44,7 +52,7 @@ class Grammar:
         elif i > j:
             return -1
 
-    def __make_indexes_equal(self):
+    def __make_ascending_indexes(self):
         valid_bodies = set()
         def helper(head, bodies):
             posible_valid_bodies = set()
@@ -52,7 +60,7 @@ class Grammar:
                 if self.__cmp_rule(head, body) >= 0:
                     valid_bodies.add(body)
                 else:
-                    posible_valid_bodies = self.substitute(bodies.copy(), body, body[0])
+                    posible_valid_bodies = self.substitute(bodies, body, body[0])
             if len(posible_valid_bodies) > 0:
                 helper(head, posible_valid_bodies)
         for head in self.productions:
@@ -80,17 +88,24 @@ class Grammar:
                 while to_concat:
                     rules[head].add(to_concat.pop() + symbol)
                 new_rules[symbol] = set()
+                self.nonterminals.add(symbol)
                 for item in recursive_bodies:
                     new_rules[symbol].add(item[1 : len(item)]) 
                     new_rules[symbol].add(item[1 : len(item)] + symbol) 
         return new_rules
 
-    def substitute(self, bodies, body_to_change, nonterminal, count = 1):
+    def substitute(self, _bodies, body_to_change, nonterminal, count = 1):
+        bodies = _bodies.copy()
         new_bodies = set()
         for body in self.productions[nonterminal]:
             new_bodies.add(body_to_change.replace(nonterminal, body, count))
         bodies.remove(body_to_change)
         return bodies | new_bodies
+
+    def __is_rule_gnf(self, rule):
+        """ Se asume que para toda w en la regla dada cada caracter de w[1:|w|] 
+            pertenece a V. """
+        return all(w[0] in self.terminals for w in rule)
 
     # [9312, 9471]
     def cnf_to_gnf(self): 
@@ -98,13 +113,26 @@ class Grammar:
         gnf = Grammar(self.productions, self.start)
         gnf.productions = gnf.remove_unit_productions()
         # X: An, X en N, n en naturales
-        gnf.enum = { item: num for num, item in enumerate(gnf.nonterminals, start = 1) }
-        gnf.__make_indexes_equal()
-        print(gnf.productions)
-        print(gnf.enum)
-        aux_dict = gnf.__remove_equal_indexes()
-        print(gnf.productions)
-        print(aux_dict)
+        gnf.enum = dict()
+        gnf.enum[gnf.start] = 1 # es neces. que S : 1 ?
+        gnf.enum = { **gnf.enum, **{ item: num for num, item in enumerate(gnf.nonterminals - set(gnf.start), start = 2) } }
+        gnf.__make_ascending_indexes()
+        gnf.productions = { **gnf.__remove_equal_indexes(), **gnf.productions }
+        while True:
+            gnf_rules = list()
+            for head in gnf.productions:
+                if gnf.__is_rule_gnf(gnf.productions[head]):
+                    gnf_rules.append(head)
+            if len(gnf.productions) == len(gnf_rules):
+                return gnf
+            for head in gnf.productions:
+                replaceable_bodies = list()
+                for body in gnf.productions[head]:
+                    if body[0] in gnf_rules:
+                        replaceable_bodies.append(body)
+                while replaceable_bodies:
+                    body = replaceable_bodies.pop()
+                    gnf.productions[head] = gnf.substitute(gnf.productions[head], body, body[0])
 
     def remove_unit_productions(self):
         ''' Removemos producciones unarias mediante un grafo '''
