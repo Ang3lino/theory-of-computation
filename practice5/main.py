@@ -2,40 +2,36 @@ from Grammar import *
 
 __author__ = "Angel Lopez Manriquez"
 
-def ask_productions(): # Cuidado con el constructor
+def ask_productions(): 
     """ Obtiene una gramatica por teclado. """
-    print("\n Programa que determina si una palabra pertenece o no a una GLC.\n")
+    print("\n Programa que transforma una gramatica de su FNC a la FNG.\n")
     nonterminals = set(input("\nIngrese las variables no terminales, separadas por ,: ").
-        replace(" ", "").split(','))
-    terminals = set(input("Ingrese las variables terminales, separadas por ,: ").
         replace(" ", "").split(','))
     start = input("Ingrese la variable inicial: ")
     productions = dict()
     print("Ingrese las productiones separadas por | : ")
     for value in nonterminals:
-        productions[value] = set(input("{} --> ".format(value)).replace(" ", "").split('|'))
-    g = Grammar (nonterminals, terminals, start, productions)
-    want_to_continue = 'y'
-    while want_to_continue == 'y':
-        print()
-        word = input("Ingrese una palabra ")
-        if g.validate(word):
-            print("La palabra %s pertenece a L(G) :D " % word)
-        else:
-            print("La palabra %s no pertenece a L(G) D: " % word)
-        want_to_continue = input("Desea continuar? (y/n): ")
+        ans = input("{} --> ".format(value)).replace(" ", "").split('|')
+        productions[value] = set(ans)
+    g = Grammar (productions, start)
+    print("La gramatica en la FNG equivalente es: ")
+    gnf = g.cnf_to_gnf()
+    for head in gnf.productions:
+        for body in gnf.productions[head]:
+            print(head, '-->', body)
     print("\nHasta luego. o-o// ")
 
 # G = (V, T, S, P)
 def test1():
     g = Grammar (
-        { 'S': { 'AB' }, # P
-        'A': { 'BB', 'a' },
-        'B': { 'AB', 'b' } } 
+        { 
+            'S': { 'AB' }, # P
+            'A': { 'BB', 'a' },
+            'B': { 'AB', 'b' } 
+        } 
     )
-    #w = 'aabbb'
-    #w = 'aab'
-    #print(g.validate(w))
+    gnf = g.cnf_to_gnf()
+    print(gnf)
 
 def test2():
     g = Grammar (
@@ -58,6 +54,8 @@ def test3():
         } 
     )
     #print(g.substitute({ 'SB', 'b' }, 'SB', 'S'))
-    g.cnf_to_gnf()
+    cnf = g.cnf_to_gnf()
+    print(cnf.productions)
 
-test3()
+test1()
+#ask_productions()

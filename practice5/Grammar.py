@@ -24,6 +24,11 @@ class Grammar:
         self.lang_prod = lambda a, b: { x  + y for x in a for y in b }
         self.is_cnf = False
 
+    def __str__(self):
+        for head in self.productions:
+            for body in self.productions[head]:
+                print(head, '-->', body)
+
     def __determine_nonterminals(self):
         """ Es importante ejecutar este metodo antes de __determine_terminals() """
         return set(self.productions.keys())
@@ -53,8 +58,10 @@ class Grammar:
             return -1
 
     def __make_ascending_indexes(self):
+        """ Despues de ejecutar este metodo se garantiza para A_i -> A_jw que i <= j """
         valid_bodies = set()
         def helper(head, bodies):
+            ''' Adjunta los cuerpos validos en la variable valid_bodies. '''
             posible_valid_bodies = set()
             for body in bodies:
                 if self.__cmp_rule(head, body) >= 0:
@@ -69,12 +76,15 @@ class Grammar:
             self.productions[head] = valid_bodies
 
     def __remove_equal_indexes(self):
+        """ Remueve las reglas que tienen recursividad por la izquierda. 
+            Para no tener caracteres raros k deberia estar en [9312, 9471] """
         rules = self.productions
         k = 9312 # Valor UTF-8
         recursive_bodies = list()
         new_rules = dict()
         for head in rules:
-            at_least_one = False
+            at_least_one = False # variable para saber si al menos un cuerpo de la produccion
+            # tiene recursividad por la izquierda
             for body in rules[head]:
                 if self.__cmp_rule(head, body) == 0: # tienen recursividad por la izquierda
                     recursive_bodies.append(body)
@@ -83,31 +93,31 @@ class Grammar:
                 for item in recursive_bodies:
                     rules[head].remove(item)
                 to_concat = list(rules[head])
-                symbol = chr(k)
+                symbol = chr(k) # nueva variable para eliminar la recursividad por la izquierda
                 k += 1
                 while to_concat:
                     rules[head].add(to_concat.pop() + symbol)
                 new_rules[symbol] = set()
-                self.nonterminals.add(symbol)
+                self.nonterminals.add(symbol) # hay una nueva variable no terminal
                 for item in recursive_bodies:
                     new_rules[symbol].add(item[1 : len(item)]) 
                     new_rules[symbol].add(item[1 : len(item)] + symbol) 
-        return new_rules
+        return new_rules # retornamos un diccionario
 
     def substitute(self, _bodies, body_to_change, nonterminal, count = 1):
+        """ Retorna una copia de las producciones modificada con la regla de substitucion. """
         bodies = _bodies.copy()
         new_bodies = set()
         for body in self.productions[nonterminal]:
             new_bodies.add(body_to_change.replace(nonterminal, body, count))
-        bodies.remove(body_to_change)
-        return bodies | new_bodies
+        bodies.remove(body_to_change) # Removemos la variable a cambiar
+        return bodies | new_bodies # Regresamos una union de conjuntos
 
     def __is_rule_gnf(self, rule):
         """ Se asume que para toda w en la regla dada cada caracter de w[1:|w|] 
             pertenece a V. """
         return all(w[0] in self.terminals for w in rule)
 
-    # [9312, 9471]
     def cnf_to_gnf(self): 
         """ Se asume que nos dan la gramatica en la forma normal de Chumsky """
         gnf = Grammar(self.productions, self.start)
@@ -119,18 +129,19 @@ class Grammar:
         gnf.__make_ascending_indexes()
         gnf.productions = { **gnf.__remove_equal_indexes(), **gnf.productions }
         while True:
-            gnf_rules = list()
+            gnf_rules = list() # guardamos las variables no terminales de una produccion
+            # cada cuerpo de la misma esta en la FNG.
             for head in gnf.productions:
                 if gnf.__is_rule_gnf(gnf.productions[head]):
                     gnf_rules.append(head)
-            if len(gnf.productions) == len(gnf_rules):
-                return gnf
+            if len(gnf.productions) == len(gnf_rules): # condicion que nos saca del bucle
+                return gnf # retornamos una gramatica
             for head in gnf.productions:
                 replaceable_bodies = list()
                 for body in gnf.productions[head]:
                     if body[0] in gnf_rules:
                         replaceable_bodies.append(body)
-                while replaceable_bodies:
+                while replaceable_bodies: # mientras tengamos elementos
                     body = replaceable_bodies.pop()
                     gnf.productions[head] = gnf.substitute(gnf.productions[head], body, body[0])
 
