@@ -16,9 +16,7 @@ def ask_productions():
     g = Grammar (productions, start)
     print("La gramatica en la FNG equivalente es: ")
     gnf = g.cnf_to_gnf()
-    for head in gnf.productions:
-        for body in gnf.productions[head]:
-            print(head, '-->', body)
+    print(gnf)
     print("\nHasta luego. o-o// ")
 
 # G = (V, T, S, P)
@@ -40,9 +38,8 @@ def test2():
         'B': { 'CC', 'b' }, 
         'C': { 'AB', 'a' } } 
     )
-    #w = 'baaba'
-    #print(g.validate(w))
-    #g.fcgtocnf()
+    gnf = g.cnf_to_gnf()
+    print(gnf)
 
 def test3():
     g = Grammar (
@@ -53,9 +50,7 @@ def test3():
             'B': { 'SB', 'b' }
         } 
     )
-    #print(g.substitute({ 'SB', 'b' }, 'SB', 'S'))
-    cnf = g.cnf_to_gnf()
-    print(cnf.productions)
+    gnf = g.cnf_to_gnf()
+    print(gnf)
 
-test1()
-#ask_productions()
+ask_productions()

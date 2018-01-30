@@ -25,9 +25,10 @@ class Grammar:
         self.is_cnf = False
 
     def __str__(self):
+        string = ''
         for head in self.productions:
-            for body in self.productions[head]:
-                print(head, '-->', body)
+            string += '{} --> {}\n'.format(head, ' | '.join(self.productions[head]))
+        return string
 
     def __determine_nonterminals(self):
         """ Es importante ejecutar este metodo antes de __determine_terminals() """
