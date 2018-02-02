@@ -1,5 +1,15 @@
 
-lista = [ "v:" for x in range(1, 11) ]
-for item in enumerate(lista, start = 1):
-    print(type(item))
-    print(item)
+def weird_chars(a, b):
+	assert a < b
+	for i in range(a, b):
+	    print(i, ': ', chr(i))
+
+x = 1
+def increment_var():
+	global x
+	x += 1
+	print(x)
+
+increment_var()
+print(x)
+	
