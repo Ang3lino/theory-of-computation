@@ -7,7 +7,7 @@ class DPDA:
 
     """ Implementacion de un automata de pila. """
 
-    def __init__(self, states, q0, final, sigma, gamma, z0, epsilon = chr(949)):
+    def __init__(self, states, q0, final, sigma, gamma, z0, epsilon = chr(949), empty_stack_as_valid = True):
         self.states = states # No. de elementos (q0, q1, ..., qn)
         self.q0 = q0
         self.final = final
@@ -30,37 +30,32 @@ class DPDA:
             sigma {str} -- Simbolo de entrada.
             gamma {str} -- Simbolo de la pila.
         """ 
-
         #pdb.set_trace()
-        if not self.stack.empty():
-            # if any((state, sigma) in x[0:2] for x in self.table): no funciona
-            if any((state, sigma) == x[0:2] for x in self.table):
-                if gamma == self.stack.top():
-                    self.stack.pop()
-                    return self.table[(state, sigma, gamma)]
-        return None, None
-
+        if self.stack.empty() or gamma != self.stack.top() or (state, sigma, gamma) not in self.table:
+            return None, None
+        self.stack.pop()
+        return self.table[(state, sigma, gamma)]
+        
     def parse(self, word):
         state = self.q0
         stack = self.stack
         for char in word:
             if stack:
-                print('stack', stack)
-                print('domain', state, char, stack.top())
+                print('\ndomain', state, char, stack.top())
                 state, to_push = self.delta(state, char, stack.top())
                 print('codomain', state, to_push)
                 if state == None:
                     return False
-                print(to_push)
-                to_push = list(to_push)
-                print(to_push)
                 if to_push == self.epsilon:
                     continue
+                to_push = list(to_push)
+                to_push.reverse()
                 while to_push:
                     stack.push(to_push.pop())
+                print('stack', stack)
             else:
-                return False
-        return True
+                return self.empty_stack_as_valid
+        return state in self.final
 
     def add_transition(self, origin, end):
         # delta: state x sigma x gamma -> un subconjunto de Q x gamma ** *
