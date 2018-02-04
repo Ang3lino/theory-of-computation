@@ -1,4 +1,4 @@
-__author__ = 'Ang3l Lopez Manriquez'
+__author__ = 'Angel Lopez Manriquez'
 
 import pdb
 from stack import Stack
@@ -7,7 +7,8 @@ class DPDA:
 
     """ Implementacion de un automata de pila. """
 
-    def __init__(self, states, q0, final, sigma, gamma, z0, epsilon = chr(949), empty_stack_as_valid = True):
+    def __init__(self, states, q0, final, sigma, gamma, z0, epsilon = chr(949), 
+        empty_stack_as_valid = True):
         self.states = states # No. de elementos (q0, q1, ..., qn)
         self.q0 = q0
         self.final = final
@@ -23,7 +24,7 @@ class DPDA:
 
     def delta(self, state, sigma, gamma):
         """ La funcion de transicion delta se define como:
-            delta: state x sigma x gamma -> Q x gamma ** *
+            delta: state x Sigma x Gamma -> Q x Gamma ** *
 
         Argumentos:
             state {int} -- Estado del automata.
@@ -35,7 +36,7 @@ class DPDA:
             return None, None
         self.stack.pop()
         return self.table[(state, sigma, gamma)]
-        
+
     def parse(self, word):
         state = self.q0
         stack = self.stack
@@ -47,6 +48,7 @@ class DPDA:
                 if state == None:
                     return False
                 if to_push == self.epsilon:
+                    print('stack', stack)
                     continue
                 to_push = list(to_push)
                 to_push.reverse()
