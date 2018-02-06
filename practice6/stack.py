@@ -1,14 +1,20 @@
 __author__ = 'Ang3l Lopez Manriquez'
 
 class Stack(list):
+    """ Tipo abstracto de dato de tipo LIFO. Hereda de list.
+    """
+
     def __init__(self):
+        """ Inicializamos el constructor de la superclase.
+        """
+
         super().__init__()
 
     def push(self, e):
         self.append(e)
 
     def pop(self):
-        if self:
+        if self: # si tenemos elementos 
             return super().pop()
         raise Exception("Pila vacia")
 
