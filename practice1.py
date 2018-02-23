@@ -1,7 +1,10 @@
 """ 
     Practica 1: Operaciones con cadenas
+    autor: Angel Lopez Manriquez
+    grupo: 2CV1
+    fecha: 23/02/2018
     =================================================================================
-        Programa que permite realizar las siguientes operaciones:
+        Programa de consola que permite realizar las siguientes operaciones:
 
         -longitud
         -concatenacion
@@ -10,7 +13,7 @@
         -subcadenas
         -prefijos
         -sufijos    
-        -comparacion
+        -palindromo
     
     Caracteristicas ------------------------------------------------------------------
         Se hace uso de los metodos de string de python, tanto de slice (denotada por 
@@ -21,9 +24,8 @@
 
     Uso ------------------------------------------------------------------------------
     python3 practice1.py
+    (usar python practice1.py si no funciona la anterior o bien de doble clic)
 """
-
-__author__ = 'Angel Lopez Manriquez'
 
 def length():
     """ Imprime la longitud de una cadena dada, no retornamos nada. """
@@ -50,10 +52,17 @@ def potency():
     
         Caracteristicas:
             Sea w una palabra, n un entero, entonces el interprete de 
-            python deducira que w * n = w + w + ... + w (n-veces) """
+            python deducira que w * n = w + w + ... + w (n-veces) 
+            para un n >= 0"""
     u = input('ingrese la cadena: ')
     n = int(input('ingrese el entero: '))
-    print('La cadena potencia es: ', u * n)
+    if n < 0:   
+        u = u[::-1]
+        n = -n
+    if n == 0:
+        print('La cadena es epsilon')
+    else:
+        print('La cadena potencia es: ', u * n)
 
 def sliding(w, n):
     """ Brinda todas las secuencias de longitud n de una palabra 
@@ -87,7 +96,7 @@ def substring():
         Caracteristicas
             Hacemos uso de la funcion sliding """
     w = input('ingrese la cadena: ')
-    print(' ') # epsilon es subcadena para cualquier cadena
+    print('epsilon') # epsilon es subcadena para cualquier cadena
     for i in range(1, len(w) + 1):
         for u in sliding(w, i):
             print(u)
@@ -95,23 +104,24 @@ def substring():
 def prefixes():
     """ Muestra todos los prefijos de una cadena dada """
     w = input('ingrese la cadena: ')
+    print('epsilon')
     for j in range(len(w) + 1):
         print(w[0:j])
 
 def sufixes():
     """ Muestra todos los sufijos de una cadena dada """
     w = input('ingrese la cadena: ')
+    print('epsilon')
     for i in range(len(w) + 1):
         print(w[i:len(w) + 1])
 
-def comparate():
+def is_palindrome():
     """ Mostramos si dos cadenas dadas son iguales """
     u = input('ingrese la primer cadena: ')
-    v = input('ingrese la segunda cadena: ')
-    if u == v:
-        print('son iguales')
+    if u == u[::-1]:
+        print('La cadena es palindroma')
     else:
-        print('no son iguales')
+        print('La cadena no es palindroma')
 
 def main(sel = 'y'):
     """ Funcion en donde preguntamos al usuario alguna accion a realizar sobre una 
@@ -127,29 +137,27 @@ def main(sel = 'y'):
         
         Retorna
             None """
-        
-    if (sel == 'n'):
-        return
-    options = [ 'Longitud', 'concatenacion', 'inverso', \
-                'potencia', 'subcadenas', 'prefijos', \
-                'sufijos', 'comparar' ]
-    print() # se imprime un salto de linea
-    # enumerate retorna una tupla enumerada de una coleccion
-    for i, option in enumerate(options):
-        print(i + 1, option) 
-    sel = input("\nSeleccione: ")
-    { # emulacion de un switch
-        '1' : length,
-        '2' : concat,
-        '3' : inverse,
-        '4' : potency,
-        '5' : substring,
-        '6' : prefixes,
-        '7' : sufixes,
-        '8' : comparate 
-    # Se mostrara 'caracter invalido' si no se escoge [1-8]
-    }.get(sel, lambda: print('caracter invalido'))()
-    sel = input('Desea continuar? (Y/n): ')
-    main(sel)
+    if sel == 'y' or sel == 'Y':
+        options = [ 'Longitud', 'concatenacion', 'inverso', \
+                    'potencia', 'subcadenas', 'prefijos', \
+                    'sufijos', 'palindromo' ]
+        print() # se imprime un salto de linea
+        # enumerate retorna una tupla enumerada de una coleccion
+        for i, option in enumerate(options):
+            print(i + 1, option) 
+        sel = input("\nSeleccione: ")
+        { # emulacion de un switch
+            '1' : length,
+            '2' : concat,
+            '3' : inverse,
+            '4' : potency,
+            '5' : substring,
+            '6' : prefixes,
+            '7' : sufixes,
+            '8' : is_palindrome 
+        # Se mostrara 'caracter invalido' si no se escoge [1-8]
+        }.get(sel, lambda: print('caracter invalido'))()
+        sel = input('Desea continuar? (Y/n): ')
+        main(sel)
 
-main('y') # Arrancamos el programa
+main('y') # Arrancamos la funcion principal
