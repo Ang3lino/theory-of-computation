@@ -5,9 +5,6 @@
 
 class NonDeterministicAutomata(val initial: HashSet<Int>,
                                val finalStates: HashSet<Int>) {
-    val states = HashMap<Int, State>()
-    var currentStates = ArrayList<State>() // public temporarily
-    val epsilon = "^$"
 
     override fun toString(): String {
         var str = String()
@@ -19,16 +16,38 @@ class NonDeterministicAutomata(val initial: HashSet<Int>,
         states[index] = State(index, values)
     }
 
-    fun setCurrentStates(ints: HashSet<Int>) {
+    fun setCurrentStates(ints: HashSet<Int>) { // public temporarily
         states.forEach({ (id, state) -> if (id in ints) currentStates.add(state) })
     }
 
+    var epsilonClosure = HashMap<Int, ArrayList<State>>()
+    val states = HashMap<Int, State>()
+    var currentStates = ArrayList<State>() // public temporarily
+    var statesWithSkippedEpsilon = HashMap<Int, List<State>>() // public temporarily
+
     fun match(word: String): Boolean {
         setCurrentStates(initial)
-        for (i in 0 until word.length) {
-            if (!skipEpsilons()) return false
+        initEpsilonClosure()
+        initStatesWithSkippedEpsilon()
+        word.forEach { char -> // it's actually a Char, not String type
+            var statesBuff = ArrayList<State>()
+            currentStates.forEach { statesBuff.addAll(statesWithSkippedEpsilon[it.id]!!.asIterable()) }
+            currentStates = ArrayList(statesBuff.distinct())
+            statesBuff.clear()
+            currentStates.forEach {
+                val others = it.delta(char.toString())
+                if (others != null) others.forEach { id -> statesBuff.add(states[id]!!) }
+            }
+            if (statesBuff.isEmpty()) return false
+            currentStates = ArrayList(statesBuff.distinct())
         }
-        return true
+        return currentStates.any { it.id in finalStates }
+    }
+
+    fun <T> ArrayList<T>.replace (old: T, newValues: Collection<T>) {
+        val i = this.indexOf(old)
+        this.remove(old)
+        this.addAll(i, newValues)
     }
 
     fun createStates(ids: HashSet<Int>): HashSet<State> {
@@ -38,20 +57,25 @@ class NonDeterministicAutomata(val initial: HashSet<Int>,
         return todo
     }
 
-    fun skipEpsilons(): Boolean {
-        if (currentStates.isEmpty()) return false
-        var i = 0
-        while (i < currentStates.size) {
-            var current = currentStates[i]
-            if (current.isDefined(epsilon)) {
-                val number = current.numberOfFunctions()
-                val nextStates = createStates(current.delta(epsilon)!!)
-                if (number == 1)  { // delta defined for epsilon only
-                    currentStates.addAll(i, nextStates) // currentStates is composed of STATES
-                    currentStates.remove(current)
-                } else currentStates.addAll(++i, nextStates)
-            } else i++
+    fun initStatesWithSkippedEpsilon() { // initEpsilon should have been executed before
+        epsilonClosure.forEach { (id, list) ->
+            statesWithSkippedEpsilon[id] = list.filter { !("^$" in it._delta.keys) || (it.numberOfFunctions() > 1) }
         }
-        return true
     }
+
+    fun initEpsilonClosure() { // public temporarily
+        states.keys.forEach {
+            var tmp = ArrayList<State>()
+            createClosure(it, tmp)
+            epsilonClosure[it] = tmp
+        }
+    }
+
+    fun createClosure(id: Int, buffer: ArrayList<State>) { // public temporarily
+        buffer.add(states[id]!!)
+        if (states[id]!!.isDefined("")) {
+            states[id]!!.delta("")!!.forEach { createClosure(it, buffer) }
+        }
+    }
+
 }

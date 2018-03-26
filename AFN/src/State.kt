@@ -4,12 +4,12 @@ class State (val id: Int,
 
     override fun toString(): String {
         var str = String()
-        for ((key, value) in _delta) str += "Id: $id Regex: $key Codomain: $value \n"
+        for ((key, value) in _delta) str += " Id: $id Regex: $key Codomain: $value "
         return str
     }
 
     fun isDefined(input: String): Boolean {
-        return delta(input)!!.isNotEmpty()
+        return delta(input) != null
     }
 
     // yeah, i know there exist getters n setters for kotlin, but they aren't
@@ -26,11 +26,12 @@ class State (val id: Int,
         for (key in _delta.keys)
             if (char.matches(key))
                 return _delta[key]
-        return HashSet()
+        return null
     }
 
     fun String.matches(regex: String): Boolean {
         val regularExpr = Regex(regex)
         return regularExpr.matches(this)
     }
+
 }
