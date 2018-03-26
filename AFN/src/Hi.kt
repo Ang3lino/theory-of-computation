@@ -29,17 +29,16 @@ fun initAutomata(): NonDeterministicAutomata {
     auto.add(25, hashMapOf("^$" to hashSetOf(12),
                            "." to hashSetOf(26)))
     auto.add(26, hashMapOf("h" to hashSetOf(27)))
-    auto.add(27, hashMapOf(">" to hashSetOf(27)))
+    auto.add(27, hashMapOf(">" to hashSetOf(28)))
     auto.add(28, hashMapOf(" " to hashSetOf())) // empty range
     return auto
 }
 
 fun main(args: Array<String>) {
     val auto = initAutomata()
-    auto.initEpsilonClosure()
-    println(auto.epsilonClosure)
-    auto.initStatesWithSkippedEpsilon()
-    auto.statesWithSkippedEpsilon.forEach { (id, values) -> println("$id \t $values ") }
+    //println(auto.match("#include <stdio.h>"))
+    //println(auto.match("#include .h>"))
+    println(auto.match("#include <stdlib.h>  "))
 }
 
 fun <T> ArrayList<T>.replace (old: T, newValues: Collection<T>) {

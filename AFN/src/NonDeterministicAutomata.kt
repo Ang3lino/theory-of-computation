@@ -24,21 +24,31 @@ class NonDeterministicAutomata(val initial: HashSet<Int>,
     val states = HashMap<Int, State>()
     var currentStates = ArrayList<State>() // public temporarily
     var statesWithSkippedEpsilon = HashMap<Int, List<State>>() // public temporarily
+    var initializeOnce = false
 
     fun match(word: String): Boolean {
         setCurrentStates(initial)
-        initEpsilonClosure()
-        initStatesWithSkippedEpsilon()
+        if (!initializeOnce) {
+            initEpsilonClosure()
+            initStatesWithSkippedEpsilon()
+            initializeOnce = true
+        }
+        //currentStates.forEach { println(it) }
         word.forEach { char -> // it's actually a Char, not String type
             var statesBuff = ArrayList<State>()
             currentStates.forEach { statesBuff.addAll(statesWithSkippedEpsilon[it.id]!!.asIterable()) }
             currentStates = ArrayList(statesBuff.distinct())
+            println("currentChar = ${char}")
+            //currentStates.forEach { println(it) }
             statesBuff.clear()
             currentStates.forEach {
                 val others = it.delta(char.toString())
                 if (others != null) others.forEach { id -> statesBuff.add(states[id]!!) }
             }
-            if (statesBuff.isEmpty()) return false
+            if (statesBuff.isEmpty()) {
+                println("i'm here")
+                return false
+            }
             currentStates = ArrayList(statesBuff.distinct())
         }
         return currentStates.any { it.id in finalStates }
