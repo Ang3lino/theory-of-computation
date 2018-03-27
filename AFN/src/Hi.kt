@@ -36,8 +36,8 @@ fun initAutomata(): NonDeterministicAutomata {
 
 fun main(args: Array<String>) {
     val auto = initAutomata()
-    //println(auto.match("#include <stdio.h>"))
-    //println(auto.match("#include .h>"))
+    println(auto.match("#include <stdio.h>"))
+    println(auto.match("#include .h>"))
     println(auto.match("#include <stdlib.h>  "))
 }
 
