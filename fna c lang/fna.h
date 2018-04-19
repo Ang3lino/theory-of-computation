@@ -46,14 +46,16 @@ void fna_add(fna *self, const int id, const char *symbol, int destiny) {
     key->symbol = g_string_new(symbol);
     vector *bucket;
     if (g_hash_table_contains(self->delta, key)) {
-        bucket = (vector *) g_hash_table_lookup(self->delta, key);
-        vpush_back(bucket, &destiny); // warning
+        vector *v = (vector *) g_hash_table_lookup(self->delta, key);
+        vpush_back(v, &destiny); // warning
     } else { // push a vector direction
         bucket = new_vector();
         vpush_back(bucket, &destiny);
         g_hash_table_insert(self->delta, key, bucket);
+        vector *v = (vector *) g_hash_table_lookup(self->delta, key);
+        if (v)  { printf("%d \n", *(int *) vat(bucket, 0)); puts ("pushed"); }
+        else puts("NULL obtained");
     }
-    printf("%d \n", *(int *) vat(bucket, 0));
 }
 
 #endif
