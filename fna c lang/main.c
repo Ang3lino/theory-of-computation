@@ -87,19 +87,54 @@ fna *build_fna_from_file(const char *path) {
     return automata;
 }
 
+// similar behavior as cin of c++ limited only by returning a "string"
+char *strcin () {
+	uint cap = 2, i = 0;
+    char *s = calloc(cap, sizeof(char));
+    char c = 'x';
+	while ((c = getchar ()) != ' ') {
+        if (c == '\n') break;
+        if (i == cap) {
+            cap *= 2;
+            s = realloc(s, cap * sizeof(char));
+        }
+		*(s + i) = c;
+        i++;
+	}
+	*(s + i) = '\0';
+    return s;
+}
+
+void process_str(fna *a, const char *word) {
+    int i, j, k, n = strlen(str);
+    GString *walk = g_string_new(NULL);
+    puts("before");
+    for (i = 0; i < a->initial_states->size; i++) 
+        printf("%d  ", *(int *) a->initial_states->item[i]);
+    vector *current; 
+    int *val = malloc(sizeof(int));
+    *val = 8;
+    vpush_back(current, val);
+    puts("after");
+    for (i = 0; i < a->initial_states->size; i++) 
+        printf("%d  ", *(int *) a->initial_states->item[i]);
+    puts("");
+    vector *v = new_vector();
+    dpair p;
+    for (i = 0; i < n; i++) {
+        vclear(w);
+        for (j = 0; j < current->size; j++) {
+            int *x = malloc(sizeof(int));                        
+            p.id = *(int *) current->item[i];
+            p.symbol = g_string_new(word->str[i]);
+            vector *d = g_hash_table_lookup(a->delta, &p);
+            vpush_back(v, vat(d, i));
+        }
+    }
+}
+
 void main(void) {
     fna *automata = build_fna_from_file("test.txt");
-    GList *it = g_hash_table_get_keys(automata->delta);
-    while (it) {
-        vector *v = (vector *) g_hash_table_lookup(automata->delta, it->data);
-        puts("-=-=-=-=-=-=-=-=-=-=-=-=-=");
-        dpair *data = it->data;
-        printf("%d, %s => ", data->id, (char *) data->symbol->str);
-        if (v) {
-            for (int j = 0; j < v->size; j++) {
-                printf("%d \n", *(int *) vat(v, j));
-            }
-        }
-        it = (it)->next;
-    }
+    char *input = "hola";
+    process_str(automata, input);
 }
