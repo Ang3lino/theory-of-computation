@@ -32,6 +32,7 @@ size_t strcount(const char *src, const char *str2find) {
     return count;
 }
 
+// returns a vector of integers
 vector *split_line(const char *splitted) {
     uint initial_len = strcount(splitted, ",") + 1;
     char **str_initial = g_strsplit(splitted, ",", -1); // alphabet and states don't matter
@@ -47,7 +48,7 @@ vector *split_line(const char *splitted) {
 fna *build_fna_from_file(const char *path) {
     const char *text = file_as_string(path);
     printf("\n%s \n", text);
-    char **splitted = g_strsplit(text, "\n", -1);
+    char **splitted = g_strsplit(text, "\n", -1); // -1 for all the entire string
     const uint lines = strcount(text, "\n") + 1;
     //for (uint i = 0; i < lines; i++) {
     //    const char *tmp = splitted[i];
@@ -91,6 +92,7 @@ fna *build_fna_from_file(const char *path) {
 char *strcin () {
 	uint cap = 2, i = 0;
     char *s = calloc(cap, sizeof(char));
+    assert(s != NULL);
     char c = 'x';
 	while ((c = getchar ()) != ' ') {
         if (c == '\n') break;
@@ -105,7 +107,8 @@ char *strcin () {
     return s;
 }
 
-char * process_str(fna *a, const char *word) {
+// it'll return a printable walk if word is accepted, else return NULL
+char *process_str(fna *a, const char *word) {
     int i, j, k, n = strlen(word);
     GString *walk = g_string_new(NULL);
     vector *current = a->initial_states; 
@@ -113,21 +116,19 @@ char * process_str(fna *a, const char *word) {
     for (i = 0; i < n; i++) {
         p.id = *(int *) vat(current, 0);
         char *x = calloc(1, sizeof(char));
-        sprintf(x, "%c", word[i]);
+        sprintf(x, "%c", word[i]); // needed for pass a char * to g_string_new
         p.symbol = g_string_new(x);
         current = g_hash_table_lookup(a->delta, &p);
-        if (current->size == 0)
+        if (current == NULL) // value not found
             return NULL;
-        char *tmp = calloc(15, sizeof(char));
+        char *tmp = calloc(15, sizeof(char)); // allocate mem to append it
+        assert(tmp != NULL);
         sprintf(tmp, "(%d %s) -> %d, ", p.id, p.symbol->str, *(int *) vat(current, 0));
         g_string_append(walk, tmp);
     }
-    printf("%s \n", walk->str);
-    puts("evaluating final state");
-    for (i = 0; i < current->size; i++) {
+    for (i = 0; i < current->size; i++) { // verify this state belongs to final states
         for (j = 0; j < a->final_states->size; j++) {
             int *x = (int *) vat(current, i), *y = (int *) vat(a->final_states, j);
-            printf("%d %d \t", *x, *y);
             if (*x == *y)
                 return walk->str;
         }
@@ -137,8 +138,9 @@ char * process_str(fna *a, const char *word) {
 
 void main(void) {
     fna *automata = build_fna_from_file("test.txt");
-    char *input = "ab";
+    printf("type a word: ");
+    char *input = strcin();
     char *printable = process_str(automata, input);
-    if (printable) printf("valid\n%s \n", printable);
-    else puts("invalid");
+    if (printable) printf("accepted \n%s \n", printable);
+    else puts("unaccepted");
 }
