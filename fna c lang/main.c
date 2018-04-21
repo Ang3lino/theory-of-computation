@@ -105,36 +105,40 @@ char *strcin () {
     return s;
 }
 
-void process_str(fna *a, const char *word) {
-    int i, j, k, n = strlen(str);
+char * process_str(fna *a, const char *word) {
+    int i, j, k, n = strlen(word);
     GString *walk = g_string_new(NULL);
-    puts("before");
-    for (i = 0; i < a->initial_states->size; i++) 
-        printf("%d  ", *(int *) a->initial_states->item[i]);
-    vector *current; 
-    int *val = malloc(sizeof(int));
-    *val = 8;
-    vpush_back(current, val);
-    puts("after");
-    for (i = 0; i < a->initial_states->size; i++) 
-        printf("%d  ", *(int *) a->initial_states->item[i]);
-    puts("");
-    vector *v = new_vector();
+    vector *current = a->initial_states; 
     dpair p;
     for (i = 0; i < n; i++) {
-        vclear(w);
-        for (j = 0; j < current->size; j++) {
-            int *x = malloc(sizeof(int));                        
-            p.id = *(int *) current->item[i];
-            p.symbol = g_string_new(word->str[i]);
-            vector *d = g_hash_table_lookup(a->delta, &p);
-            vpush_back(v, vat(d, i));
+        p.id = *(int *) vat(current, 0);
+        char *x = calloc(1, sizeof(char));
+        sprintf(x, "%c", word[i]);
+        p.symbol = g_string_new(x);
+        current = g_hash_table_lookup(a->delta, &p);
+        if (current->size == 0)
+            return NULL;
+        char *tmp = calloc(15, sizeof(char));
+        sprintf(tmp, "(%d %s) -> %d, ", p.id, p.symbol->str, *(int *) vat(current, 0));
+        g_string_append(walk, tmp);
+    }
+    printf("%s \n", walk->str);
+    puts("evaluating final state");
+    for (i = 0; i < current->size; i++) {
+        for (j = 0; j < a->final_states->size; j++) {
+            int *x = (int *) vat(current, i), *y = (int *) vat(a->final_states, j);
+            printf("%d %d \t", *x, *y);
+            if (*x == *y)
+                return walk->str;
         }
     }
+    return NULL;
 }
 
 void main(void) {
     fna *automata = build_fna_from_file("test.txt");
-    char *input = "hola";
-    process_str(automata, input);
+    char *input = "ab";
+    char *printable = process_str(automata, input);
+    if (printable) printf("valid\n%s \n", printable);
+    else puts("invalid");
 }

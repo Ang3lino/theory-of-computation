@@ -76,7 +76,7 @@ new_vector (void) {
 
 void 
 vpush_back (vector *v, void *data) {
-    if (v->size  + 1 >= v->capacity)
+    if (v->size + 1 >= v->capacity)
         resize (v);
     v->item[v->size++] = data;
 }
@@ -147,6 +147,15 @@ vadd (vector *v, size_t index, void *data) {
 
 void 
 vclear(vector *v) {
+    //free(v->item);
+    v->size = 0;
+}
+
+void 
+vdestroy(vector *v) {
+    for (int i = 0; i < v->size; i++) {
+        free(v->item[i]);
+    }
     free(v->item);
     free(v);
 }
