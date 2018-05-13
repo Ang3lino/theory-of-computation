@@ -20,6 +20,7 @@ class Grammar:
         self.productions = productions
         self.nonterminals = nont 
         self.terminals = term
+        self.epsilon = epsilon
 
         self.lang_prod = lambda a, b: { x  + y for x in a for y in b }
 
@@ -97,6 +98,21 @@ class Grammar:
         self.terminals = set(term)
         print(self)
 
+    def __determine_which_have_epsilon(self):
+        def helper(p, have_epsilon):
+            for c in p:
+                if c == self.epsilon:
+                    have_epsilon.add(h)
+                    break
+        have_epsilon = set()
+        for h in self.productions:
+            helper(self.productions[h], have_epsilon)
+        return have_epsilon
+
+    def remove_null_productions(self):
+        have_epsilon = self.__determine_which_have_epsilon()
+        print(have_epsilon)
+
     # functions below i don't use them
 
     def substitute(self, _bodies, body_to_change, nonterminal, count = 1):
@@ -144,4 +160,13 @@ class Grammar:
         conjunto.remove(old)
         conjunto.add(new)
 
+def power_set(lista):
+    n = len(lista)
+    power = []
+    for i in range(1 << n):
+        power.append(list())
+        for j in range(n):
+            if i & (1 << j) != 0:
+                power[i].append(lista[j]) 
+    return power
 
