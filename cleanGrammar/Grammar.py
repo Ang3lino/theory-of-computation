@@ -8,23 +8,22 @@ class Grammar:
     """ G = (N, T, S, P) """
     
     def __init__(self, nont, term, productions, start = 'S', epsilon = chr(949)):
-        """ El constructor infiere las variables no terminales y no terminales por medio
-            del diccionario self.productions. La variable inicial por defecto es el 
-            caracter S.
-            
+        """ 
             nonterminals: set[string]
             terminals: set[string]
-            start: string
-            productions: dict[string: set[string]] """
+            start: str
+            productions: dict[string: set[string]]
+            epsilon: str, by default it's really epsilon from greek alphabet """
         self.start = start
         self.productions = productions
         self.nonterminals = nont 
         self.terminals = term
         self.epsilon = epsilon
 
-        self.lang_prod = lambda a, b: { x  + y for x in a for y in b }
+        self.lang_prod = lambda a, b: { x  + y for x in a for y in b } # language product
 
     def __str__(self):
+        """ method called each time we request to print an instance variable. """
         string = 'nonterminals: '
         for nont in self.nonterminals:
             string += '{}'.format(nont)
@@ -99,68 +98,64 @@ class Grammar:
         print(self)
 
     def __determine_which_have_epsilon(self):
+        """ returns a list with heads that have rules that have epsilon, it also removes
+        a body which has epsilon. """
         def helper(p, have_epsilon):
             for c in p:
                 if c == self.epsilon:
                     have_epsilon.add(h)
-                    break
+                    break 
         have_epsilon = set()
         for h in self.productions:
             helper(self.productions[h], have_epsilon)
+        for x in have_epsilon:
+            self.productions[x].remove(self.epsilon)
         return have_epsilon
 
     def remove_null_productions(self):
         have_epsilon = self.__determine_which_have_epsilon()
-        print(have_epsilon)
+        for e in have_epsilon: # replace ocurrence step by step
+            for h in self.productions:
+                words = list()
+                for p in self.productions[h]:
+                    for c in p:
+                        if c == e:
+                            words += self.__replace_ocurrences(p, c)
+                            break
+                self.productions[h] |= set(words) # join new rules
+        print(self)
 
-    # functions below i don't use them
-
-    def substitute(self, _bodies, body_to_change, nonterminal, count = 1):
-        """ Retorna una copia de las producciones modificada con la regla de substitucion. """
-        bodies = _bodies.copy()
-        new_bodies = set()
-        for body in self.productions[nonterminal]:
-            new_bodies.add(body_to_change.replace(nonterminal, body, count))
-        bodies.remove(body_to_change) # Removemos la variable a cambiar
-        return bodies | new_bodies # Regresamos una union de conjuntos
-
-    def remove_unit_productions(self):
-        ''' Removemos producciones unarias mediante un grafo '''
-        g = DirectedGraph()
-        productions = self.productions.copy()
-        for key in productions: # construimos el grafo
-            for rule in productions[key]:
-                if len(rule) == 1 and rule in self.nonterminals:
-                    g.add_edge(key, rule)
-        followings = { v: g.vertices_forward(v) for v in g.vertices() }
-        not_unit = dict()
-        not_unit_fun = lambda s: len(s) != 1 or s in self.terminals
-        for vertex in g.vertices():
-            not_unit[vertex] = set(filter(not_unit_fun, productions[vertex])) 
-        for e0, e1 in g.edges():
-            productions[e0].remove(e1)
-            for node in followings[e0]:
-                productions[e0] = productions[e0] | not_unit[node]
-        return productions
-
-    def add_lists(a, b = None): 
-        ''' Retorna una lista concatenada, parecida al operador ++ de Scala o Haskell '''
-        vector = list(); vector.append(a); vector.append(b)
-        return tuple(vector)
+    def __replace_ocurrences(self, string, char):
+        """ Function called when we find a string which has a char that belongs to
+            have_epsilon list, we just concatenate characters neede in for loop. """
+        n = string.count(char)
+        #pdb.set_trace()
+        ocurrences = power_set([ x for x in range(1, n + 1) ]) # to know what to replace
+        words = []
+        for i in range(1 << n): # length of power set
+            j = 0
+            tmp = str()
+            for c in string:
+                if c != char:
+                    tmp += c
+                elif c == char:
+                    j = j + 1
+                    if not j in ocurrences[i]:
+                        tmp += c
+            words.append(tmp)
+        print(words)
+        return words
 
     def __print_dict(self, cnf):
-        """ Esta funcion no es necesaria para el algoritmo, se uso para depurar el codigo """
+        """ It prints a dictionary passed by parameters """
         for key in cnf:
             print('{}: '.format(key))
             for value in cnf[key]:
                 print(value)
             print()
 
-    def __replace_set_value(self, conjunto, old, new):
-        conjunto.remove(old)
-        conjunto.add(new)
-
 def power_set(lista):
+    """ returns a list of lists, a power set, from a list given using bit operations. """
     n = len(lista)
     power = []
     for i in range(1 << n):
